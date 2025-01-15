@@ -5,7 +5,7 @@ Authors@R:
     person("Andrew", "Chen", , "andrewdr@bu.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8508-0227"))
 Description: Helper functions to estimate the survival associations of user-provided gene signatures in TCGA & METABRIC.
-License: use_mit_license()
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -14,3 +14,10 @@ BugReports: https://github.com/montilab/brcasurv/issues
 Depends: 
     R (>= 2.10)
 LazyData: true
+Imports: 
+    Biobase,
+    dplyr,
+    GSVA,
+    here,
+    survival,
+    tibble
