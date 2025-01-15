@@ -6,6 +6,11 @@
 
 Helper functions to estimate the survival associations of user-provided gene signatures in TCGA & METABRIC.
 
+## Installation:
+```
+devtools::install_github("montilab/brcasurv")
+```
+
 ## Example Usage:
 
 Given a named list of gene sets e.g. list(GS1 = c("gene1", "gene2", "gene3")) one can score each sample in TCGA/METABRIC with `gsva_data` and use `gsva_cox_fit` to fit coxph models.
