@@ -1,7 +1,6 @@
 library(GSVA)
 library(Biobase)
 library(survival)
-library(here)
 
 #' @title GSVA scoring on TCGA + METABRIC
 #' @description Processes gene set variation analysis (GSVA) data for breast cancer datasets.
@@ -25,16 +24,16 @@ gsva_data <- function(sigs_list,
 
   # Loading signatures
   if (adjust_prolif) {
-    load(here("data",  "prolif_sig.rda"))
+    data("prolif_sig")
     sigs_list <- c(sigs_list, prolif_sig)
   }
   if (adjust_inflam) {
-    load(here("data",  "inflam_sig.rda"))
+    data("inflam_sig")
     sigs_list <- c(sigs_list, inflam_sig)
   }
 
   if (brca_data == "TCGA") {
-    load(here("data",  "tcga_data.rda"))
+    data("tcga_data")
     gsva_data <- GSVA::gsva(tcga_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
 
     # Survival Filtering
@@ -53,7 +52,7 @@ gsva_data <- function(sigs_list,
       tibble::column_to_rownames("ID")
 
   } else if (brca_data == "METABRIC") {
-    load(here("data",  "metabric_data.rda"))
+    data("metabric_data")
     gsva_data <- GSVA::gsva(metabric_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
 
     pData(gsva_data) <- pData(gsva_data) %>%
@@ -122,4 +121,36 @@ gsva_cox_fit <- function(gsva_data,
   }
 
   return(cox_fits)
+}
+
+.onLoad <- function(libname, pkgname) {
+  data_dir <- system.file("data", package = pkgname)
+  tcga_path <- file.path(data_dir, "tcga_data.rda")
+  metabric_path <- file.path(data_dir, "metabric_data.rda")
+  
+  if(!file.exists(tcga_path) | !file.exists(metabric_path)) {
+    message("Downloading TCGA/METABRIC data.")
+    tryCatch({
+      # Download zip file from dropbox
+      temp_zip <- tempfile(fileext = ".zip")
+      utils::download.file("https://www.dropbox.com/scl/fo/ncrbv8i7g1fs5xpofeoa8/AGdjjxSgSiG6tDuRb6RZimE?rlkey=a20j6knqys4npqev1fcul7kas&e=5&dl=1",
+                           temp_zip,
+                           mode = "wb")
+      # Unzip contents into package directory
+      utils::unzip(temp_zip, exdir = data_dir)
+      # Delete zip file
+      unlink(temp_zip)
+      message("Download complete.")
+    }, error = function(e) {
+      # Handle any errors that occur
+      stop(paste("Error during download or unzip:", e$message))
+      
+    }, finally = {
+      # Ensure the temporary file is deleted even if there's an error
+      if (file.exists(temp_zip)) {
+        unlink(temp_zip)
+      }
+    })
+  }
+  
 }
