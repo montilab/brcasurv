@@ -26,3 +26,24 @@ gsva_cox_fits <- gsva_cox_fit(gsva_data,
                               adjust_prolif = TRUE,
                               adjust_inflam = TRUE)
 ```
+
+## Plotting:
+
+Use `survminer::ggadjustedcurves` to plot results from the cox models.
+
+```
+if (!require("survminer", quietly = TRUE)) {
+  install.packages("survminer")
+}
+
+# Replace parameters with relevant data.
+ggadjustedcurves(fit = {cox_fit},
+                 data = {pData(gsva_data)},
+                 method = "conditional",
+                 variable = {signature_name},
+                 xlab = "Days",
+                 ylab = "Survival Probability",
+                 pval = TRUE,
+                 title = "TCGA/METABRIC age-adjusted cox model"
+)
+```
