@@ -21,7 +21,8 @@ gsva_data <- gsva_data(sigs_list = sigs_list,
                        adjust_prolif = TRUE, 
                        adjust_inflam = TRUE)
 
-gsva_cox_fits <- gsva_cox_fit(gsva_data, 
+gsva_cox_fits <- gsva_cox_fit(gsva_data,
+                              brca_data = "TCGA", # Or "METABRIC"
                               adjust_age = TRUE,
                               adjust_prolif = TRUE,
                               adjust_inflam = TRUE)
