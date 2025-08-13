@@ -9,7 +9,7 @@ library(survival)
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
 #' @param adjust_inflam Logical indicating whether to adjust for inflammation signature.
 #' @return A GSVA object containing processed data.
-#' @import GSVA Biobase survival here
+#' @import GSVA Biobase survival
 #' @export
 gsva_data <- function(sigs_list,
                       brca_data = c("TCGA", "METABRIC"),
@@ -24,16 +24,19 @@ gsva_data <- function(sigs_list,
 
   # Loading signatures
   if (adjust_prolif) {
-    data("prolif_sig")
+    stopifnot(exists("prolif_sig", where = "package:brcasurv"))
+    data("prolif_sig", envir=environment())
     sigs_list <- c(sigs_list, prolif_sig)
   }
   if (adjust_inflam) {
-    data("inflam_sig")
+    stopifnot(exists("inflam_sig", where = "package:brcasurv"))
+    data("inflam_sig", envir=environment())
     sigs_list <- c(sigs_list, inflam_sig)
   }
 
   if (brca_data == "TCGA") {
-    data("tcga_data")
+    stopifnot(exists("tcga_data", where = "package:brcasurv"))
+    data("tcga_data", envir=environment())
     gsva_data <- GSVA::gsva(tcga_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
 
     # Survival Filtering
@@ -52,7 +55,8 @@ gsva_data <- function(sigs_list,
       tibble::column_to_rownames("ID")
 
   } else if (brca_data == "METABRIC") {
-    data("metabric_data")
+    stopifnot(exists("metabric_data", where = "package:brcasurv"))
+    data("metabric_data", envir=environment())
     gsva_data <- GSVA::gsva(metabric_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
 
     pData(gsva_data) <- pData(gsva_data) %>%
@@ -127,7 +131,7 @@ gsva_cox_fit <- function(gsva_data,
   data_dir <- system.file("data", package = pkgname)
   tcga_path <- file.path(data_dir, "tcga_data.rda")
   metabric_path <- file.path(data_dir, "metabric_data.rda")
-  
+
   if(!file.exists(tcga_path) | !file.exists(metabric_path)) {
     message("Downloading TCGA/METABRIC data.")
     tryCatch({
@@ -144,7 +148,7 @@ gsva_cox_fit <- function(gsva_data,
     }, error = function(e) {
       # Handle any errors that occur
       stop(paste("Error during download or unzip:", e$message))
-      
+
     }, finally = {
       # Ensure the temporary file is deleted even if there's an error
       if (file.exists(temp_zip)) {
@@ -152,5 +156,5 @@ gsva_cox_fit <- function(gsva_data,
       }
     })
   }
-  
+
 }
