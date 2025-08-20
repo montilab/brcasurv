@@ -4,7 +4,7 @@
 
 # brcasurv
 
-Helper functions to estimate the survival associations of user-provided gene signatures in TCGA & METABRIC.
+Helper functions to estimate the survival associations of user-provided gene signatures in TCGA/METABRIC/SCANB.
 
 ## Installation:
 ```
@@ -17,12 +17,12 @@ Given a named list of gene sets e.g. list(GS1 = c("gene1", "gene2", "gene3")) on
 
 ```
 gsva_data <- gsva_data(sigs_list = sigs_list, 
-                       brca_data = "TCGA", # Or "METABRIC"
+                       brca_data = "TCGA", # Or "METABRIC/SCANB"
                        adjust_prolif = TRUE, 
                        adjust_inflam = TRUE)
 
 gsva_cox_fits <- gsva_cox_fit(gsva_data,
-                              brca_data = "TCGA", # Or "METABRIC"
+                              brca_data = "TCGA", # Or "METABRIC/SCANB"
                               adjust_age = TRUE,
                               adjust_prolif = TRUE,
                               adjust_inflam = TRUE)
@@ -53,6 +53,6 @@ ggadjustedcurves(fit = {cox_fit},
                  xlab = "Days",
                  ylab = "Survival Probability",
                  pval = TRUE,
-                 title = "TCGA/METABRIC age-adjusted cox model"
+                 title = "TCGA/METABRIC/SCANB age-adjusted cox model"
 )
 ```

@@ -6,7 +6,7 @@
 \usage{
 gsva_cox_fit(
   gsva_data,
-  brca_data = c("TCGA", "METABRIC"),
+  brca_data = c("TCGA", "METABRIC", "SCANB"),
   five_year = FALSE,
   adjust_age = TRUE,
   adjust_prolif = TRUE,
@@ -16,7 +16,7 @@ gsva_cox_fit(
 \arguments{
 \item{gsva_data}{A GSVA object containing processed data.}
 
-\item{brca_data}{Character string specifying the breast cancer dataset used. Options are "TCGA" or "METABRIC".}
+\item{brca_data}{Character string specifying the breast cancer dataset used. Options are "TCGA", "METABRIC", or "SCANB".}
 
 \item{five_year}{Logical indicating whether to use 5-year survival data.}
 

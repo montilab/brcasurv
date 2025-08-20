@@ -6,7 +6,7 @@
 \usage{
 gsva_data(
   sigs_list,
-  brca_data = c("TCGA", "METABRIC"),
+  brca_data = c("TCGA", "METABRIC", "SCANB"),
   adjust_prolif = TRUE,
   adjust_inflam = TRUE
 )
@@ -14,7 +14,7 @@ gsva_data(
 \arguments{
 \item{sigs_list}{A list of character vectors representing gene signatures.}
 
-\item{brca_data}{Character string specifying the breast cancer dataset to use. Options are "TCGA" or "METABRIC".}
+\item{brca_data}{Character string specifying the breast cancer dataset to use. Options are "TCGA", "METABRIC", or "SCANB".}
 
 \item{adjust_prolif}{Logical indicating whether to adjust for proliferation signature.}
 
