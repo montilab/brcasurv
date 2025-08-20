@@ -12,7 +12,7 @@ library(assertthat)
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
 #' @param adjust_inflam Logical indicating whether to adjust for inflammation signature.
 #' @return A GSVA object containing processed data.
-#' @import GSVA Biobase survival tibble dplyr
+#' @import GSVA Biobase survival tibble dplyr assertthat
 #' @export
 gsva_data <- function(sigs_list,
                       brca_data = c("TCGA", "METABRIC", "SCANB"),
@@ -94,7 +94,9 @@ gsva_data <- function(sigs_list,
   return(gsva_data)
 }
 
-#' @title Cox Proportional Hazards Model Fitting for GSVA Data
+#' @title Cox Proportional Hazards Model Fitting for GSVA Data with PH Check
+#' @description Fits Cox proportional hazards models to GSVA data for breast cancer datasets,
+#'   and tests the proportional hazards assumption.
 #' @description Fits Cox proportional hazards models to GSVA data for breast cancer datasets.
 #' @param gsva_data A GSVA object containing processed data.
 #' @param brca_data Character string specifying the breast cancer dataset used. Options are "TCGA", "METABRIC", or "SCANB".
@@ -102,7 +104,11 @@ gsva_data <- function(sigs_list,
 #' @param adjust_age Logical indicating whether to adjust for age.
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
 #' @param adjust_inflam Logical indicating whether to adjust for inflammation signature.
-#' @return A list of fitted Cox proportional hazards models.
+#' @return A list with components:
+#' \describe{
+#'   \item{cox_fits}{A list of fitted Cox proportional hazards models.}
+#'   \item{ph_tests}{A list of proportional hazards test results for each model (objects returned by `cox.zph`).}
+#' }
 #' @import survival
 #' @export
 gsva_cox_fit <- function(gsva_data,
@@ -141,15 +147,22 @@ gsva_cox_fit <- function(gsva_data,
   message("Adjusting for: ", paste(covariates, collapse = " "))
 
   cox_fits <- list()
+  ph_tests <- list()
+
   for (sig in exp_sigs) {
     # Adding gsva scores to pdata
     gsva_data[[sig]] <- t(exprs(gsva_data[sig,]))
 
     # Fitting Cox model
-    cox_fits[[sig]] <- coxph(reformulate(c(covariates, sig), response = surv_response), data = pData(gsva_data))
+    fit <- coxph(reformulate(c(covariates, sig), response = surv_response), data = pData(gsva_data))
+    cox_fits[[sig]] <- fit
+
+    # Check proportional hazards assumption
+    ph_test <- cox.zph(fit)
+    ph_tests[[sig]] <- ph_test
   }
 
-  return(cox_fits)
+  return(list(cox_fits = cox_fits, ph_tests = ph_tests))
 }
 
 .onAttach <- function(libname, pkgname) {

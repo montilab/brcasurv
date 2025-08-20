@@ -2,7 +2,7 @@
 % Please edit documentation in R/brca_survival.R
 \name{gsva_cox_fit}
 \alias{gsva_cox_fit}
-\title{Cox Proportional Hazards Model Fitting for GSVA Data}
+\title{Cox Proportional Hazards Model Fitting for GSVA Data with PH Check}
 \usage{
 gsva_cox_fit(
   gsva_data,
@@ -27,8 +27,15 @@ gsva_cox_fit(
 \item{adjust_inflam}{Logical indicating whether to adjust for inflammation signature.}
 }
 \value{
-A list of fitted Cox proportional hazards models.
+A list with components:
+\describe{
+\item{cox_fits}{A list of fitted Cox proportional hazards models.}
+\item{ph_tests}{A list of proportional hazards test results for each model (objects returned by \code{cox.zph}).}
+}
 }
 \description{
+Fits Cox proportional hazards models to GSVA data for breast cancer datasets,
+and tests the proportional hazards assumption.
+
 Fits Cox proportional hazards models to GSVA data for breast cancer datasets.
 }
