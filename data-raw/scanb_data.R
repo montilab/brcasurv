@@ -5,7 +5,7 @@ library(DESeq2)
 
 do_save <- FALSE
 PATH <- file.path(Sys.getenv("MLAB"), "projects/brcameta/brca_atlas")
-DATA_PATH <- file.path(Sys.getenv("CBM"), "otherStudies/RNAseq/2025-07-17_Christafsson_BRCA/RNA Sequencing-Based Single Sample Predictors of Molecular Subtype and Risk of Recurrence for Clinical Assessment of Early-Stage Breast Cancer/StringTie prepDE gene count data unadjusted")
+DATA_PATH <- file.path(Sys.getenv("CBM"), "SCANB/StringTie_prepDE_gene_count_data_unadjusted")
 options(box.path=file.path(Sys.getenv("MLAB"), "personal/andrewdr/MLscripts"))
 box::use(R/rm_low_rnaseq_counts)
 
