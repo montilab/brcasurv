@@ -11,7 +11,7 @@
 
 #' SCANB Data
 #'
-#' SummarizedExperiment Object containing 18426 features (ENSEMBLIDs) and 9142 samples. Counts are filtered to remove
+#' SummarizedExperiment Object containing 18129 features (HGNC) and 9142 samples. Counts are filtered to remove
 #' low-expressed genes, DESeq2normalized to normalize for library size, and log transformed (log2(x+1)).
 "scanb_data"
 

@@ -5,13 +5,13 @@
 \alias{scanb_data}
 \title{SCANB Data}
 \format{
-An object of class \code{SummarizedExperiment} with 18426 rows and 9142 columns.
+An object of class \code{SummarizedExperiment} with 18129 rows and 9142 columns.
 }
 \usage{
 scanb_data
 }
 \description{
-SummarizedExperiment Object containing 18426 features (ENSEMBLIDs) and 9142 samples. Counts are filtered to remove
+SummarizedExperiment Object containing 18426 features (HGNC) and 9142 samples. Counts are filtered to remove
 low-expressed genes, DESeq2normalized to normalize for library size, and log transformed (log2(x+1)).
 }
 \keyword{datasets}

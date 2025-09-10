@@ -2,6 +2,8 @@ library(tidyverse)
 library(readxl)
 library(SummarizedExperiment)
 library(DESeq2)
+library(org.Hs.eg.db)
+library(AnnotationDbi)
 
 do_save <- FALSE
 PATH <- file.path(Sys.getenv("MLAB"), "projects/brcameta/brca_atlas")
@@ -39,8 +41,36 @@ norm_counts <- counts(dds, normalized = TRUE)
 # ----- LOG2 TRANSFORMATION -----
 log_norm_counts <- log2(norm_counts + 1)
 
-# ----- UPDATE SummarizedExperiment -----
-# Option 1: Replace counts assay directly (overwrites raw counts)
+# ----- UPDATE assay in SummarizedExperiment -----
+# Replace counts assay directly (overwrites raw counts)
 assay(scanb_se) <- log_norm_counts
+
+# ----- UPDATE features for SummarizedExperiment ----
+# Suppose 'se' is your SummarizedExperiment object
+ensembl_ids <- rownames(scanb_se)
+
+# If Ensembl IDs have version numbers (e.g., ENSG000001234.5), strip them
+ensembl_ids_clean <- sub("\\..*", "", ensembl_ids)
+
+# Map Ensembl IDs to HGNC symbols using org.Hs.eg.db
+hgnc_symbols <- mapIds(org.Hs.eg.db,
+                       keys = ensembl_ids_clean,
+                       column = "SYMBOL",
+                       keytype = "ENSEMBL",
+                       multiVals = "first")
+
+# Add symbols as rowData or as a new column
+rowData(scanb_se)$HGNC <- hgnc_symbols
+rowData(scanb_se)$ENSEMBL <- rownames(scanb_se)
+
+# Subset: keep entries with non-NA, non-duplicated symbols
+keep <- !is.na(hgnc_symbols) & !duplicated(hgnc_symbols)
+
+# 18426 features to 18129
+scanb_se <- scanb_se[keep, ]
+
+# Set rownames to HGNC symbols
+rownames(scanb_se) <- rowData(scanb_se)$HGNC
+
 scanb_data <- scanb_se
 usethis::use_data(scanb_data, overwrite = TRUE)
