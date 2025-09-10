@@ -1,9 +1,11 @@
 library(GSVA)
 library(Biobase)
+library(SummarizedExperiment)
 library(survival)
 library(dplyr)
 library(tibble)
 library(assertthat)
+library(S4Vectors)
 
 #' @title GSVA scoring on TCGA + METABRIC
 #' @description Processes gene set variation analysis (GSVA) data for breast cancer datasets.
@@ -12,7 +14,7 @@ library(assertthat)
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
 #' @param adjust_inflam Logical indicating whether to adjust for inflammation signature.
 #' @return A GSVA object containing processed data.
-#' @import GSVA Biobase survival tibble dplyr assertthat
+#' @import GSVA Biobase SummarizedExperiment S4Vectors survival tibble dplyr assertthat
 #' @export
 gsva_data <- function(sigs_list,
                       brca_data = c("TCGA", "METABRIC", "SCANB"),
@@ -84,11 +86,16 @@ gsva_data <- function(sigs_list,
     data_filter <- na_filter & missing_death_day_filter
     gsva_data <- gsva_data[, data_filter]
 
-    pData(gsva_data) <- pData(gsva_data) |>
+    colData(gsva_data) <- colData(gsva_data) |>
+      data.frame() |>
       dplyr::mutate(time = OS_days) |>
       dplyr::mutate(time_5 = if_else(as.numeric(time) < 1825.0, as.numeric(time), 1826.0)) |>
       dplyr::mutate(vital_status_1 = if_else(OS_event == 0, 1, 2)) |>
-      dplyr::mutate(vital_status_5 = if_else(OS_event == 1 & (time_5 > 1825.0), 1, vital_status_1))
+      dplyr::mutate(vital_status_5 = if_else(OS_event == 1 & (time_5 > 1825.0), 1, vital_status_1)) |>
+      S4Vectors::DataFrame()
+
+    # Convert to eset for uniformity
+    gsva_data <- convert_se_eset(gsva_data)
   }
 
   return(gsva_data)
@@ -164,6 +171,31 @@ gsva_cox_fit <- function(gsva_data,
 
   return(list(cox_fits = cox_fits, ph_tests = ph_tests))
 }
+
+#' Convert SummarizedExperiment to ExpressionSet
+#'
+#' @param se A SummarizedExperiment object
+#' @param assay_name Character (Optional) – name of assay to use (default: the first assay)
+#' @return ExpressionSet object
+#' @import SummarizedExperiment Biobase
+convert_se_eset <- function(se, assay_name = NULL) {
+  if (!requireNamespace("SummarizedExperiment") || !requireNamespace("Biobase")) {
+    stop("Please install 'SummarizedExperiment' and 'Biobase' packages.")
+  }
+  if (!is(se, "SummarizedExperiment")) {
+    stop("'se' must be a SummarizedExperiment object.")
+  }
+
+  # Choose the appropriate assay
+  exprs_matrix <- if (!is.null(assay_name)) SummarizedExperiment::assay(se, assay_name) else SummarizedExperiment::assay(se)
+  pheno <- as(BiocGenerics::as.data.frame(SummarizedExperiment::colData(se)), "AnnotatedDataFrame")
+  feature <- as(BiocGenerics::as.data.frame(SummarizedExperiment::rowData(se)), "AnnotatedDataFrame")
+  # Construct and return the ExpressionSet
+  eset <- Biobase::ExpressionSet(assayData = exprs_matrix, phenoData = pheno, featureData = feature)
+
+  return(eset)
+}
+
 
 .onAttach <- function(libname, pkgname) {
   data_dir <- system.file("data", package = pkgname)

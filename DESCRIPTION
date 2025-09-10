@@ -21,4 +21,6 @@ Imports:
     GSVA,
     here,
     survival,
+    SummarizedExperiment,
+    S4Vectors,
     tibble

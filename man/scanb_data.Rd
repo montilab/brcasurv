@@ -11,7 +11,7 @@ An object of class \code{SummarizedExperiment} with 18129 rows and 9142 columns.
 scanb_data
 }
 \description{
-SummarizedExperiment Object containing 18426 features (HGNC) and 9142 samples. Counts are filtered to remove
+SummarizedExperiment Object containing 18129 features (HGNC) and 9142 samples. Counts are filtered to remove
 low-expressed genes, DESeq2normalized to normalize for library size, and log transformed (log2(x+1)).
 }
 \keyword{datasets}
