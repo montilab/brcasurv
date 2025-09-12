@@ -10,7 +10,9 @@ gsva_cox_fit(
   five_year = FALSE,
   adjust_age = TRUE,
   adjust_prolif = TRUE,
-  adjust_inflam = TRUE
+  adjust_inflam = TRUE,
+  ph_filter = TRUE,
+  ph_alpha = 0.05
 )
 }
 \arguments{
@@ -25,6 +27,10 @@ gsva_cox_fit(
 \item{adjust_prolif}{Logical indicating whether to adjust for proliferation signature.}
 
 \item{adjust_inflam}{Logical indicating whether to adjust for inflammation signature.}
+
+\item{ph_filter}{Logical indicating whether to filter out signatures that violate the proportional hazards (PH) assumption based on \code{ph_alpha}. Default is \code{TRUE}.}
+
+\item{ph_alpha}{Numeric threshold for the PH assumption test p-value. Signatures with PH p-value greater than this will be filtered out if \code{ph_filter} is \code{TRUE}. Default is 0.05.}
 }
 \value{
 A list with components:
@@ -35,7 +41,5 @@ A list with components:
 }
 \description{
 Fits Cox proportional hazards models to GSVA data for breast cancer datasets,
-and tests the proportional hazards assumption.
-
-Fits Cox proportional hazards models to GSVA data for breast cancer datasets.
+tests the proportional hazards assumption, and optionally filters out signatures that violate the PH assumption.
 }

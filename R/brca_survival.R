@@ -103,14 +103,16 @@ gsva_data <- function(sigs_list,
 
 #' @title Cox Proportional Hazards Model Fitting for GSVA Data with PH Check
 #' @description Fits Cox proportional hazards models to GSVA data for breast cancer datasets,
-#'   and tests the proportional hazards assumption.
-#' @description Fits Cox proportional hazards models to GSVA data for breast cancer datasets.
+#'   tests the proportional hazards assumption, and optionally filters out signatures that violate the PH assumption.
 #' @param gsva_data A GSVA object containing processed data.
 #' @param brca_data Character string specifying the breast cancer dataset used. Options are "TCGA", "METABRIC", or "SCANB".
 #' @param five_year Logical indicating whether to use 5-year survival data.
 #' @param adjust_age Logical indicating whether to adjust for age.
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
 #' @param adjust_inflam Logical indicating whether to adjust for inflammation signature.
+#' @param ph_filter Logical indicating whether to filter out signatures that violate the proportional hazards (PH) assumption based on \code{ph_alpha}. Default is \code{TRUE}.
+#' @param ph_alpha Numeric threshold for the PH assumption test p-value. Signatures with PH p-value greater than this will be filtered out if \code{ph_filter} is \code{TRUE}. Default is 0.05.
+#'
 #' @return A list with components:
 #' \describe{
 #'   \item{cox_fits}{A list of fitted Cox proportional hazards models.}
@@ -123,7 +125,9 @@ gsva_cox_fit <- function(gsva_data,
                          five_year = FALSE,
                          adjust_age = TRUE,
                          adjust_prolif = TRUE,
-                         adjust_inflam = TRUE) {
+                         adjust_inflam = TRUE,
+                         ph_filter = TRUE,
+                         ph_alpha = 0.05) {
 
   brca_data <- match.arg(brca_data, c("TCGA", "METABRIC", "SCANB"))
 
@@ -162,11 +166,18 @@ gsva_cox_fit <- function(gsva_data,
 
     # Fitting Cox model
     fit <- coxph(reformulate(c(covariates, sig), response = surv_response), data = pData(gsva_data))
-    cox_fits[[sig]] <- fit
-
     # Check proportional hazards assumption
     ph_test <- cox.zph(fit)
+
+    if(ph_filter) {
+      ph_pvalue <- ph_test$table[sig, "p"]
+      if(ph_pvalue <= ph_alpha) {
+        next
+      }
+    }
+
     ph_tests[[sig]] <- ph_test
+    cox_fits[[sig]] <- fit
   }
 
   return(list(cox_fits = cox_fits, ph_tests = ph_tests))
@@ -195,7 +206,6 @@ convert_se_eset <- function(se, assay_name = NULL) {
 
   return(eset)
 }
-
 
 .onAttach <- function(libname, pkgname) {
   data_dir <- system.file("data", package = pkgname)
