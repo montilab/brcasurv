@@ -209,32 +209,28 @@ convert_se_eset <- function(se, assay_name = NULL) {
 
 .onAttach <- function(libname, pkgname) {
   data_dir <- system.file("data", package = pkgname)
-  tcga_path <- file.path(data_dir, "tcga_data.rda")
-  metabric_path <- file.path(data_dir, "metabric_data.rda")
-  scanb_path <- file.path(data_dir, "scanb_data.rda")
 
-  if(!file.exists(tcga_path) | !file.exists(metabric_path) | !file.exists(scanb_path)) {
-    packageStartupMessage("Downloading TCGA/METABRIC/SCANB data.")
+  base_url <- "https://js2.jetstream-cloud.org:8001/swift/v1/brcasurv/"
+  files_to_download <- c("inflam_sig.rda", "prolif_sig.rda", "scanb_data.rda", "metabric_data.rda", "tcga_data.rda")
+
+  # Check if all files exist
+  all_files_exist <- all(sapply(files_to_download, function(f) file.exists(file.path(data_dir, f))))
+
+  if (!all_files_exist) {
+    packageStartupMessage("Downloading required data files.")
     tryCatch({
-      # Download zip file from dropbox
-      temp_zip <- tempfile(fileext = ".zip")
-      utils::download.file("https://www.dropbox.com/scl/fo/ncrbv8i7g1fs5xpofeoa8/AGdjjxSgSiG6tDuRb6RZimE?rlkey=a20j6knqys4npqev1fcul7kas&e=5&dl=1",
-                           temp_zip,
-                           mode = "wb")
-      # Unzip contents into package directory
-      utils::unzip(temp_zip, exdir = data_dir)
-      # Delete zip file
-      unlink(temp_zip)
+      for (filename in files_to_download) {
+        file_path <- file.path(data_dir, filename)
+        download_url <- paste0(base_url, filename)
+
+        # Download each file
+        packageStartupMessage(paste("Downloading", filename, "..."))
+        utils::download.file(download_url, file_path, mode = "wb")
+      }
       packageStartupMessage("Download complete.")
     }, error = function(e) {
       # Handle any errors that occur
-      stop(paste("Error during download or unzip:", e$message))
-
-    }, finally = {
-      # Ensure the temporary file is deleted even if there's an error
-      if (file.exists(temp_zip)) {
-        unlink(temp_zip)
-      }
+      stop(paste("Error during data download:", e$message))
     })
   }
 }
