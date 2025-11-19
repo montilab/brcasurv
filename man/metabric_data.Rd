@@ -5,7 +5,7 @@
 \alias{metabric_data}
 \title{METABRIC BRCA Data}
 \format{
-An object of class \code{ExpressionSet} with 24368 rows and 1980 columns.
+An object of class \code{SummarizedExperiment} with 24368 rows and 1980 columns.
 }
 \usage{
 metabric_data

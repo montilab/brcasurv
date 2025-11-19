@@ -1,4 +1,5 @@
 library(Biobase)
+library(SummarizedExperiment)
 
 # This script takes a look the some raw/processed METABRIC BRCA Gene Expression data, performs sanity checks, and assembles an ESet pertaining to the CBioPortal data for the same
 # For more information on the data formats from CBioPortal, visit https://github.com/cBioPortal/cbioportal/blob/master/docs/File-Formats.md
@@ -86,8 +87,9 @@ ES <- ExpressionSet(assayData = cbio.mat,
                     featureData = AnnotatedDataFrame(data.frame(cbio.d[,c(1,2)],row.names=rownames(cbio.mat)))
 )
 
-ES
 
 saveRDS(ES,"/restricted/projectnb/montilab-p/CBMrepositoryData/CURTIS/ESets/metabrick_GE_ESet.rds")
+
+metabric_data <- as(metabric_data, "SummarizedExperiment")
 
 usethis::use_data(metabric_data, overwrite = TRUE)

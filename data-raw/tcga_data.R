@@ -1,6 +1,7 @@
-require(Biobase)
-require(DESeq2)
-require(edgeR)
+library(Biobase)
+library(SummarizedExperiment)
+library(DESeq2)
+library(edgeR)
 
 eset.symbols <- function(eset) {
   eset <- eset[fData(eset)$hgnc_symbol != "" & !duplicated(fData(eset)$hgnc_symbol) & !is.na(fData(eset)$hgnc_symbol),]
@@ -52,5 +53,8 @@ if (F) {
   eset.normalize("BRCA")
   eset.filter("BRCA")
 }
+
+# Changing to Summarized Experiment
+tcga_data <- as(tcga_data, "SummarizedExperiment")
 
 usethis::use_data(tcga_data, overwrite = TRUE)

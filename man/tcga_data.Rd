@@ -5,7 +5,7 @@
 \alias{tcga_data}
 \title{TCGA BRCA Data}
 \format{
-An object of class \code{ExpressionSet} with 37335 rows and 1222 columns.
+An object of class \code{SummarizedExperiment} with 37335 rows and 1222 columns.
 }
 \usage{
 tcga_data
