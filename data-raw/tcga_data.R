@@ -56,5 +56,6 @@ if (F) {
 
 # Changing to Summarized Experiment
 tcga_data <- as(tcga_data, "SummarizedExperiment")
+tcga_data@metadata <- list()
 
 usethis::use_data(tcga_data, overwrite = TRUE)

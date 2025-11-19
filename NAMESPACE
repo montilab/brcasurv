@@ -2,7 +2,6 @@
 
 export(gsva_cox_fit)
 export(gsva_data)
-import(Biobase)
 import(GSVA)
 import(S4Vectors)
 import(SummarizedExperiment)

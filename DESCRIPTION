@@ -1,11 +1,11 @@
 Package: brcasurv
-Title: Age-adjusted survival associations of gene signatures in TCGA & METABRIC
+Title: Age-adjusted survival associations of gene signatures in TCGA/METABRIC/SCANB.
 Version: 0.0.1
 Authors@R: 
     person("Andrew", "Chen", , "andrewdr@bu.edu", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8508-0227"))
-Description: Helper functions to estimate the survival associations of user-provided gene signatures in TCGA & METABRIC.
-License: MIT + file LICENSE
+Description: Helper functions to estimate the survival associations of user-provided gene signatures in TCGA/METABRIC/SCANB.
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -16,10 +16,8 @@ Depends:
 LazyData: true
 Imports: 
     assertthat,
-    Biobase,
     dplyr,
     GSVA,
-    here,
     survival,
     SummarizedExperiment,
     S4Vectors,

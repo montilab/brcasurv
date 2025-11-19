@@ -11,6 +11,6 @@ An object of class \code{SummarizedExperiment} with 24368 rows and 1980 columns.
 metabric_data
 }
 \description{
-ExpressionSet Object containing 24368 features (HGNC) and 1980 samples. Counts are log transformed
+SummarizedExperiment Object containing 24368 features (HGNC) and 1980 samples. Counts are log transformed
 }
 \keyword{datasets}

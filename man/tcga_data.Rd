@@ -11,7 +11,7 @@ An object of class \code{SummarizedExperiment} with 37335 rows and 1222 columns.
 tcga_data
 }
 \description{
-ExpressionSet Object containing 37335 features (HGNC) and 1222 samples. Counts are filtered to remove
+SummarizedExperiment Object containing 37335 features (HGNC) and 1222 samples. Counts are filtered to remove
 low-expressed genes, DESeq2normalized to normalize for library size, and log transformed (log2(x+1)).
 }
 \keyword{datasets}

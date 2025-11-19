@@ -91,5 +91,6 @@ ES <- ExpressionSet(assayData = cbio.mat,
 saveRDS(ES,"/restricted/projectnb/montilab-p/CBMrepositoryData/CURTIS/ESets/metabrick_GE_ESet.rds")
 
 metabric_data <- as(metabric_data, "SummarizedExperiment")
+metabric_data@metadata <- list()
 
 usethis::use_data(metabric_data, overwrite = TRUE)

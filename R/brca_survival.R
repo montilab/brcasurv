@@ -1,5 +1,4 @@
 library(GSVA)
-library(Biobase)
 library(SummarizedExperiment)
 library(survival)
 library(dplyr)
@@ -14,7 +13,7 @@ library(S4Vectors)
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
 #' @param adjust_inflam Logical indicating whether to adjust for inflammation signature.
 #' @return A GSVA object containing processed data.
-#' @import GSVA Biobase SummarizedExperiment S4Vectors survival tibble dplyr assertthat
+#' @import GSVA SummarizedExperiment S4Vectors survival tibble dplyr assertthat
 #' @export
 gsva_data <- function(sigs_list,
                       brca_data = c("TCGA", "METABRIC", "SCANB"),
@@ -42,7 +41,9 @@ gsva_data <- function(sigs_list,
   if (brca_data == "TCGA") {
     stopifnot(exists("tcga_data", where = "package:brcasurv"))
     data("tcga_data", envir=environment())
-    gsva_data <- GSVA::gsva(tcga_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
+
+    gsva_param <- GSVA::gsvaParam(tcga_data, sigs_list, maxDiff = TRUE)
+    gsva_data <- GSVA::gsva(gsva_param)
 
     # Survival Filtering
     na_filter <- !is.na(gsva_data$vital_status)
@@ -50,18 +51,22 @@ gsva_data <- function(sigs_list,
     data_filter <- na_filter & missing_death_day_filter
 
     gsva_data <- gsva_data[, data_filter]
-    pData(gsva_data) <- pData(gsva_data) |>
+    colData(gsva_data) <- colData(gsva_data) |>
+      data.frame() |>
       tibble::rownames_to_column("ID") |>
       dplyr::mutate(time = if_else(!is.na(days_to_death), days_to_death, days_to_last_follow_up)) |>
       dplyr::mutate(time_5 = if_else(as.numeric(time) < 1825.0, as.numeric(time), 1826.0)) |>
       dplyr::mutate(vital_status_1 = if_else(vital_status == "Alive", 1, 2)) |>
       dplyr::mutate(vital_status_5 = if_else(vital_status == "Dead" & (time_5 > 1825.0), 1, vital_status_1)) |>
-      tibble::column_to_rownames("ID")
+      tibble::column_to_rownames("ID") |>
+      S4Vectors::DataFrame()
 
   } else if (brca_data == "METABRIC") {
     stopifnot(exists("metabric_data", where = "package:brcasurv"))
     data("metabric_data", envir=environment())
-    gsva_data <- GSVA::gsva(metabric_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
+
+    gsva_param <- GSVA::gsvaParam(metabric_data, sigs_list, maxDiff = TRUE)
+    gsva_data <- GSVA::gsva(gsva_param)
 
     # Survival Filtering
     na_filter <- !is.na(gsva_data$OS_STATUS)
@@ -69,16 +74,20 @@ gsva_data <- function(sigs_list,
     data_filter <- na_filter & missing_death_day_filter
     gsva_data <- gsva_data[, data_filter]
 
-    pData(gsva_data) <- pData(gsva_data) |>
+    colData(gsva_data) <- colData(gsva_data) |>
+      data.frame() |>
       dplyr::mutate(time = OS_MONTHS * 30.437) |>
       dplyr::mutate(time_5 = if_else(as.numeric(time) < 1825.0, as.numeric(time), 1826.0)) |>
       dplyr::mutate(vital_status_1 = if_else(OS_STATUS == "LIVING", 1, 2)) |>
-      dplyr::mutate(vital_status_5 = if_else(OS_STATUS == "DECEASED" & (time_5 > 1825.0), 1, vital_status_1))
+      dplyr::mutate(vital_status_5 = if_else(OS_STATUS == "DECEASED" & (time_5 > 1825.0), 1, vital_status_1)) |>
+      S4Vectors::DataFrame()
 
   } else if (brca_data == "SCANB") {
     stopifnot(exists("scanb_data", where = "package:brcasurv"))
     data("scanb_data", envir=environment())
-    gsva_data <- GSVA::gsva(scanb_data, sigs_list, mx.diff=TRUE, verbose=FALSE)
+
+    gsva_param <- GSVA::gsvaParam(scanb_data, sigs_list, maxDiff = TRUE)
+    gsva_data <- GSVA::gsva(gsva_param)
 
     # Survival Filtering
     na_filter <- !is.na(gsva_data$OS_event)
@@ -93,9 +102,6 @@ gsva_data <- function(sigs_list,
       dplyr::mutate(vital_status_1 = if_else(OS_event == 0, 1, 2)) |>
       dplyr::mutate(vital_status_5 = if_else(OS_event == 1 & (time_5 > 1825.0), 1, vital_status_1)) |>
       S4Vectors::DataFrame()
-
-    # Convert to eset for uniformity
-    gsva_data <- convert_se_eset(gsva_data)
   }
 
   return(gsva_data)
@@ -140,11 +146,13 @@ gsva_cox_fit <- function(gsva_data,
     surv_response <- "Surv(as.numeric(time), vital_status_1)"
   }
 
+  gsva_mat <- assays(gsva_data)[["es"]]
+
   if (adjust_prolif) {
-    gsva_data[["prolif"]] <- t(exprs(gsva_data["prolif",]))
+    gsva_data[["prolif"]] <- t(gsva_mat["prolif",])
   }
   if (adjust_inflam) {
-    gsva_data[["inflam"]] <- t(exprs(gsva_data["inflam",]))
+    gsva_data[["inflam"]] <- t(gsva_mat["inflam",])
   }
 
   age_var_map <- list(
@@ -161,11 +169,11 @@ gsva_cox_fit <- function(gsva_data,
   ph_tests <- list()
 
   for (sig in exp_sigs) {
-    # Adding gsva scores to pdata
-    gsva_data[[sig]] <- t(exprs(gsva_data[sig,]))
+    # Adding gsva scores to colData
+    gsva_data[[sig]] <- t(gsva_mat[sig,])
 
     # Fitting Cox model
-    fit <- coxph(reformulate(c(covariates, sig), response = surv_response), data = pData(gsva_data))
+    fit <- coxph(reformulate(c(covariates, sig), response = surv_response), data = colData(gsva_data))
     # Check proportional hazards assumption
     ph_test <- cox.zph(fit)
 
@@ -181,30 +189,6 @@ gsva_cox_fit <- function(gsva_data,
   }
 
   return(list(cox_fits = cox_fits, ph_tests = ph_tests))
-}
-
-#' Convert SummarizedExperiment to ExpressionSet
-#'
-#' @param se A SummarizedExperiment object
-#' @param assay_name Character (Optional) – name of assay to use (default: the first assay)
-#' @return ExpressionSet object
-#' @import SummarizedExperiment Biobase
-convert_se_eset <- function(se, assay_name = NULL) {
-  if (!requireNamespace("SummarizedExperiment") || !requireNamespace("Biobase")) {
-    stop("Please install 'SummarizedExperiment' and 'Biobase' packages.")
-  }
-  if (!is(se, "SummarizedExperiment")) {
-    stop("'se' must be a SummarizedExperiment object.")
-  }
-
-  # Choose the appropriate assay
-  exprs_matrix <- if (!is.null(assay_name)) SummarizedExperiment::assay(se, assay_name) else SummarizedExperiment::assay(se)
-  pheno <- as(BiocGenerics::as.data.frame(SummarizedExperiment::colData(se)), "AnnotatedDataFrame")
-  feature <- as(BiocGenerics::as.data.frame(SummarizedExperiment::rowData(se)), "AnnotatedDataFrame")
-  # Construct and return the ExpressionSet
-  eset <- Biobase::ExpressionSet(assayData = exprs_matrix, phenoData = pheno, featureData = feature)
-
-  return(eset)
 }
 
 .onAttach <- function(libname, pkgname) {

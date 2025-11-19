@@ -33,10 +33,10 @@ gsva_cox_fits <- gsva_cox_fit(gsva_data,
 Example of plotting code that uses `survminer::ggadjustedcurves` to plot results from the cox models. 
 Since gsva scores of a geneset are continuous, we need to first make the geneset scores into a categorical variable and define a new cox model. 
 ```
-gsva_data$sig <- t(exprs(gsva_data[“sig_name”,])
+gsva_data$sig <- t(assays(gsva_data)[["es"]][`sig_name`,])
 gsva_sig_median <- median(gsva_data$sig)
 gsva_data$stat <- with(gsva_data, ifelse(gsva_data$sig < gsva_sig_median, 0, 1))
-cox_fit <- coxph(Surv(as.numeric(time_5), vital_status_5) ~ age_at_index + stat, data = pData(gsva_data))
+cox_fit <- coxph(Surv(as.numeric(time_5), vital_status_5) ~ age_at_index + stat, data = colData(gsva_data))
 ```
 
 Now we can plot the two adjusted survival curves.
@@ -47,9 +47,9 @@ if (!require("survminer", quietly = TRUE)) {
 
 # Replace parameters with relevant data.
 ggadjustedcurves(fit = {cox_fit},
-                 data = {pData(gsva_data)},
+                 data = {colData(gsva_data)},
                  method = "conditional",
-                 variable = {signature_name},
+                 variable = {sig_name},
                  xlab = "Days",
                  ylab = "Survival Probability",
                  pval = TRUE,
