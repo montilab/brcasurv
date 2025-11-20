@@ -112,6 +112,8 @@ gsva_data <- function(sigs_list,
 #'   tests the proportional hazards assumption, and optionally filters out signatures that violate the PH assumption.
 #' @param gsva_data A GSVA object containing processed data.
 #' @param brca_data Character string specifying the breast cancer dataset used. Options are "TCGA", "METABRIC", or "SCANB".
+#' @param subtype Character string specifying a PAM50 subtype to subset the data.
+#' @param subset_subtype Logical indicating whether to subset data to a specified subtype.
 #' @param five_year Logical indicating whether to use 5-year survival data.
 #' @param adjust_age Logical indicating whether to adjust for age.
 #' @param adjust_prolif Logical indicating whether to adjust for proliferation signature.
@@ -128,6 +130,8 @@ gsva_data <- function(sigs_list,
 #' @export
 gsva_cox_fit <- function(gsva_data,
                          brca_data = c("TCGA", "METABRIC", "SCANB"),
+                         subtype = c("LumA", "LumB", "Her2", "Basal", "Normal"),
+                         subset_subtype = FALSE,
                          five_year = FALSE,
                          adjust_age = TRUE,
                          adjust_prolif = TRUE,
@@ -136,14 +140,32 @@ gsva_cox_fit <- function(gsva_data,
                          ph_alpha = 0.05) {
 
   brca_data <- match.arg(brca_data, c("TCGA", "METABRIC", "SCANB"))
+  subtype <- match.arg(subtype, c("LumA", "LumB", "Her2", "Basal", "Normal"))
 
   all_sigs <- rownames(gsva_data)
   exp_sigs <- all_sigs[!(all_sigs %in% c("prolif", "inflam"))]
 
-  if(five_year) {
+  if (five_year) {
     surv_response <- "Surv(as.numeric(time_5), vital_status_5)"
   } else {
     surv_response <- "Surv(as.numeric(time), vital_status_1)"
+  }
+
+  if (subset_subtype) {
+    subtype_col_map <- list(
+      TCGA = "subtype_selected",
+      METABRIC = "Pam50_SUBTYPE",
+      SCANB = "SSP.Subtype"
+    )
+    subtype_col <- subtype_col_map[[brca_data]]
+
+    if (brca_data == "TCGA") {
+      subtype <- paste0("BRCA.", subtype)
+    }
+
+    stopifnot("Subtype not present in dataset" = (subtype %in% gsva_data[[subtype_col]]))
+    message("Subsetting for ", paste(subtype, "samples"))
+    gsva_data <- gsva_data[,gsva_data[[subtype_col]] == subtype]
   }
 
   gsva_mat <- assays(gsva_data)[["es"]]

@@ -7,6 +7,8 @@
 gsva_cox_fit(
   gsva_data,
   brca_data = c("TCGA", "METABRIC", "SCANB"),
+  subtype = c("LumA", "LumB", "Her2", "Basal", "Normal"),
+  subset_subtype = FALSE,
   five_year = FALSE,
   adjust_age = TRUE,
   adjust_prolif = TRUE,
@@ -19,6 +21,10 @@ gsva_cox_fit(
 \item{gsva_data}{A GSVA object containing processed data.}
 
 \item{brca_data}{Character string specifying the breast cancer dataset used. Options are "TCGA", "METABRIC", or "SCANB".}
+
+\item{subtype}{Character string specifying a PAM50 subtype to subset the data.}
+
+\item{subset_subtype}{Logical indicating whether to subset data to a specified subtype.}
 
 \item{five_year}{Logical indicating whether to use 5-year survival data.}
 
