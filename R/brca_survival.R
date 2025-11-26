@@ -165,7 +165,7 @@ gsva_cox_fit <- function(gsva_data,
 
     stopifnot("Subtype not present in dataset" = (subtype %in% gsva_data[[subtype_col]]))
     message("Subsetting for ", paste(subtype, "samples"))
-    gsva_data <- gsva_data[,gsva_data[[subtype_col]] == subtype]
+    gsva_data <- gsva_data[, !is.na(gsva_data[[subtype_col]]) & gsva_data[[subtype_col]] == subtype]
   }
 
   gsva_mat <- assays(gsva_data)[["es"]]
