@@ -1,0 +1,115 @@
+---
+title: "Getting started with brcasurv"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with brcasurv}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+`brcasurv` provides helper functions to score gene signatures and fit Cox proportional hazards models across breast cancer cohorts (TCGA, METABRIC, SCANB).
+
+## Installation
+
+```{r eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+
+BiocManager::install(c("GSVA", "SummarizedExperiment", "S4Vectors"))
+remotes::install_github("montilab/brcasurv")
+```
+
+## 1) Prepare signatures
+
+`gsva_data()` expects a named list of character vectors.
+
+```{r}
+sigs_list <- list(
+  MYC_TARGETS = c("MYC", "CDK4", "CCND1"),
+  IMMUNE_MODULE = c("CD3D", "CD3E", "LCK")
+)
+```
+
+## 2) Compute GSVA scores
+
+This step scores each signature per sample and adds derived survival fields in `colData`.
+
+```{r eval = FALSE}
+gsva_obj <- gsva_data(
+  sigs_list = sigs_list,
+  brca_data = "TCGA",
+  adjust_prolif = TRUE,
+  adjust_inflam = TRUE
+)
+```
+
+## 3) Fit Cox models
+
+By default, age/proliferation/inflammation covariates can be included and PH filtering applied.
+
+```{r eval = FALSE}
+fit_res <- gsva_cox_fit(
+  gsva_data = gsva_obj,
+  brca_data = "TCGA",
+  adjust_age = TRUE,
+  adjust_prolif = TRUE,
+  adjust_inflam = TRUE,
+  ph_filter = TRUE,
+  ph_alpha = 0.05
+)
+
+names(fit_res$cox_fits)
+```
+
+## 4) Optional subtype-specific analysis
+
+```{r eval = FALSE}
+fit_luma <- gsva_cox_fit(
+  gsva_data = gsva_obj,
+  brca_data = "TCGA",
+  subset_subtype = TRUE,
+  subtype = "LumA",
+  adjust_age = TRUE,
+  adjust_prolif = TRUE,
+  adjust_inflam = TRUE
+)
+```
+
+## 5) Optional adjusted survival curves
+
+For plotting, convert one signature score to a binary group (for example, median split), refit a Cox model, then plot with `survminer`.
+
+```{r eval = FALSE}
+se <- gsva_obj
+sig_name <- "MYC_TARGETS"
+
+se$signature_score <- as.numeric(SummarizedExperiment::assay(se, "es")[sig_name, ])
+se$signature_group <- ifelse(
+  se$signature_score < median(se$signature_score, na.rm = TRUE),
+  "Low", "High"
+)
+
+cox_fit <- survival::coxph(
+  survival::Surv(as.numeric(time_5), vital_status_5) ~ age_at_index + signature_group,
+  data = SummarizedExperiment::colData(se)
+)
+
+survminer::ggadjustedcurves(
+  fit = cox_fit,
+  data = SummarizedExperiment::colData(se),
+  method = "conditional",
+  variable = "signature_group",
+  xlab = "Days",
+  ylab = "Survival Probability",
+  pval = TRUE,
+  title = "Age-adjusted Cox model"
+)
+```
