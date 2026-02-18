@@ -214,6 +214,10 @@ gsva_cox_fit <- function(gsva_data,
 }
 
 .onAttach <- function(libname, pkgname) {
+  if (identical(Sys.getenv("BRCASURV_SKIP_DATA_DOWNLOAD"), "true")) {
+    return(invisible())
+  }
+
   data_dir <- system.file("data", package = pkgname)
 
   base_url <- "https://js2.jetstream-cloud.org:8001/swift/v1/brcasurv/"
