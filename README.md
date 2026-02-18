@@ -8,8 +8,30 @@ Helper functions to estimate the survival associations of user-provided gene sig
 
 ## Installation:
 ```
-devtools::install_github("montilab/brcasurv")
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
+  install.packages("BiocManager")
+}
+BiocManager::install(
+  c("GSVA", "SummarizedExperiment", "S4Vectors"),
+  dependencies = TRUE
+)
+remotes::install_github("montilab/brcasurv", dependencies = TRUE)
 ```
+
+If installation fails due to missing transitive dependencies, install them explicitly and retry. For example:
+```
+install.packages("magick")
+BiocManager::install(c("Biostrings", "rhdf5", "h5mread"))
+```
+
+## Getting Started Vignette
+
+After installing the package:
+```
+browseVignettes("brcasurv")
+```
+
+The source vignette is available at `vignettes/getting-started.Rmd`.
 
 ## Example Usage:
 
@@ -33,10 +55,14 @@ gsva_cox_fits <- gsva_cox_fit(gsva_data,
 Example of plotting code that uses `survminer::ggadjustedcurves` to plot results from the cox models. 
 Since gsva scores of a geneset are continuous, we need to first make the geneset scores into a categorical variable and define a new cox model. 
 ```
-gsva_data$sig <- t(assays(gsva_data)[["es"]][`sig_name`,])
-gsva_sig_median <- median(gsva_data$sig)
-gsva_data$stat <- with(gsva_data, ifelse(gsva_data$sig < gsva_sig_median, 0, 1))
-cox_fit <- coxph(Surv(as.numeric(time_5), vital_status_5) ~ age_at_index + stat, data = colData(gsva_data))
+sig_name <- "GS1"
+gsva_data$sig <- as.numeric(SummarizedExperiment::assay(gsva_data, "es")[sig_name, ])
+gsva_sig_median <- median(gsva_data$sig, na.rm = TRUE)
+gsva_data$stat <- ifelse(gsva_data$sig < gsva_sig_median, "Low", "High")
+cox_fit <- survival::coxph(
+  survival::Surv(as.numeric(time_5), vital_status_5) ~ age_at_index + stat,
+  data = SummarizedExperiment::colData(gsva_data)
+)
 ```
 
 Now we can plot the two adjusted survival curves.
@@ -46,10 +72,10 @@ if (!require("survminer", quietly = TRUE)) {
 }
 
 # Replace parameters with relevant data.
-ggadjustedcurves(fit = {cox_fit},
-                 data = {colData(gsva_data)},
+survminer::ggadjustedcurves(fit = cox_fit,
+                 data = SummarizedExperiment::colData(gsva_data),
                  method = "conditional",
-                 variable = {sig_name},
+                 variable = "stat",
                  xlab = "Days",
                  ylab = "Survival Probability",
                  pval = TRUE,
